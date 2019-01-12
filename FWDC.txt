@@ -1,0 +1,149 @@
+#include <stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+    
+struct Status {
+    bool  farmer;
+    bool  wolf;
+    bool  duck;
+    bool  cabbage;
+};
+    
+typedef struct node{
+struct node *next;
+int vertex;
+}n;
+    
+//status of the objects
+struct Status s[15];
+n *G[20];   
+//heads of linked list
+int visited[20];
+//create adjacency list
+//insert an edge (vi,vj) in te adjacency list
+void DFS(int);
+// check the conddtion is legal or not
+int getUnvisitedVertex(int);
+    
+int main()
+{
+    for(int i = 0; i<16; i++)
+    {
+        s[i].farmer=0;
+        s[i].wolf=0;
+        s[i].duck=0;
+        s[i].cabbage=0;
+    } //for initialises all to 0 and then values get changed to 1 where required
+
+    s[1].farmer=1;
+
+    s[2].farmer=1;
+    s[2].wolf=1;
+
+    s[3].farmer=1;
+    s[3].duck=1;
+
+    s[4].farmer=1;
+    s[4].cabbage=1;
+    
+    s[5].duck=1;
+
+    s[6].farmer=1;
+    s[6].wolf=1;
+    s[6].duck=1;
+
+    s[7].wolf=1;
+
+    s[8].farmer=1;
+    s[8].wolf=1;
+    s[8].cabbage=1;
+    
+    s[9].wolf=1;
+    s[9].cabbage=1;
+    
+    s[10].farmer=1;
+    s[10].wolf=1;
+    s[10].duck=1;
+    s[10].cabbage=1;
+  
+    //initialised visited to 0
+    // for loops which insert the connections between the nodes
+    for(int i = 0; i<5; i++)
+    {
+        insert(0, i);
+    }
+    for(int i =3; i<10; i++)
+    {
+        insert(i, i + 1);
+    }
+
+    DFS(0);
+  }
+void DFS(int i)
+{
+    n *p;
+   
+	if(((s[i].wolf==s[i].duck)||//wolf, duck in the same side
+    (s[i].duck==s[i].cabbage)) && s[i].farmer != s[i].duck){ //after end statemnt is what changed to make it work
+    //illegal
+    }else{
+        showResult(s[i]);
+    }
+    p=G[i];
+    visited[i]=1;
+    while(p!=NULL)
+    {
+       i=p->vertex;
+       
+       if(!visited[i])
+            DFS(i);
+        p=p->next;
+    }
+}
+ void showResult(struct Status s){
+     
+     if(s.farmer == false){
+		 printf( "farmer 0 \n");
+    	}else {
+    	    printf( "farmer 1 \n");
+    	}
+    if(s.wolf==false){
+		 printf( "wolf 0 \n");
+    	}else {
+    	    printf( "wolf 1 \n");
+    	}
+    if(s.duck==false){
+		 printf( "duck 0 \n");
+    	}else {
+    	    printf( "duck 1 \n");
+    	}
+    if(s.cabbage==false){
+		 printf( "cabbage 0 \n");
+    	}else {
+    	    printf( "cabbage 1 \n");
+    	}
+	printf("\n");
+ }
+
+void insert(int vi,int vj)
+{
+    n *p,*q;
+    
+    //acquire memory for the new node
+    q=(n*)malloc(sizeof(n));
+    q->vertex=vj;
+    q->next=NULL;
+ 
+    //insert the node in the linked list number vi
+    if(G[vi]==NULL)
+        G[vi]=q;
+    else
+    {
+        //go to end of the linked list
+        p=G[vi];
+       
+        while(p->next!=NULL)
+            p=p->next;
+        p->next=q;
+    }
+}

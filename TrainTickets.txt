@@ -1,0 +1,294 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#define MAX 100
+int stationsVisited;
+int main()
+{
+    int numberOfTickets; /*max 10*/
+    int ticketType; /*possibilities: 1 return, 2 one way*/
+    int *passengerType; /*possibilities: 0 under 10, 1 under 16, 2 student, 3 over 60, 4 other*/
+    double typePriceModifier[] = {0.60, 0.85, 0.80, 0.75, 1.25}; /*the modifier to the price, first value corresponds to under 10 and so on..*/
+    passengerType = (int*)calloc(4, sizeof(int));
+    /*startPoint is the point at which the passenger gets on, endPoint is where they get off*/
+    int typeSelected = 0;
+    int userInput;
+    float basePrice = 5.00; /*This is the price to get from one stop to the next*/
+    float ticketPrice;
+    bool validInput = false;
+    
+    printf("How many people are traveling with you? (including yourself) \n");
+    //validation for the number of tickets being purchased. Value must be between 1 and 10
+    while(!validInput)
+    {
+        scanf("%d", &numberOfTickets);
+        if(numberOfTickets <=10 && numberOfTickets > 0)
+        {
+            validInput = true;
+        }
+        else
+        {
+            printf("Please enter a value between 1 and 10!\n");
+        }
+    }
+    validInput = false; // swapping validInput back to false for next validation
+    printf("Which type of ticket would you like\n1. Return\n2. One way \n");
+    while(!validInput)
+    {
+        scanf("%d", &userInput);
+        if(userInput <=2 &&userInput > 0)
+        {
+            validInput = true;
+        }
+        else
+        {
+            printf("Please enter either 1 or 2!\n");
+        }
+    }
+    validInput = false;
+    /* If the user enters 1 then the price will remain at the base, otherwise it will modify to be
+    1.7x the price*/
+    if(userInput == 1)
+    {
+        ticketType = 1.70;
+    }
+    else if(userInput == 2)
+    {
+        ticketType = 1.00;
+    }
+    userInput = 0;
+    /*Loop to gather the amount of people in each group riding, if group n is chosen then saves
+    the amount of people to nth element in the pointer array passengerType*/
+    while(typeSelected == 0)
+    {
+        printf("What types of people are riding today?\n1. Under 10\n2. Under 16\n3. Student\n4. Over 60\n5. Other\n");
+        while(!validInput)
+        {
+            scanf("%d", &userInput);
+            if(userInput > 0 && userInput <6)
+            {
+                validInput = true;
+            }
+            else
+            {
+                printf("Please enter a value between 1 and 5! \n");
+            }
+        }
+        validInput = false;
+        int passengersAllocated = *(passengerType + 5) + *(passengerType + 1) + *(passengerType + 2) + *(passengerType + 3) + *(passengerType + 4);
+        printf("How many of this group type will be riding?\n");
+        printf("Currently %d of %d allocated\n", passengersAllocated, numberOfTickets);
+        int userInput2;
+        while(!validInput)
+        {
+            scanf("%d", &userInput2);
+            if(userInput2 >= 0 && userInput2 <= (numberOfTickets - passengersAllocated))
+            {
+                validInput = true;
+            }
+            else
+            {
+                printf("Please enter a value between 0 and the total number of tickets! \n");
+            }
+        }
+        validInput = false;
+        if(userInput == 1)
+        {
+            *(passengerType + 1) = userInput2;
+        }
+        else if (userInput == 2)
+        {
+            *(passengerType + 2) = userInput2;
+        }
+        else if (userInput == 3)
+        {
+            *(passengerType + 3) = userInput2;
+        }
+        else if (userInput == 4)
+        {
+            *(passengerType + 4) = userInput2;
+        }
+                else if (userInput == 5)
+        {
+            *(passengerType + 5) = userInput2;
+        }
+        /*if statement chacks that the user has entered values which makes the group size equal to that of the number 
+        of tickets that they wish to buy*/
+        if((*(passengerType + 5) + *(passengerType + 1) + *(passengerType + 2) + *(passengerType + 3) + *(passengerType + 4)) == numberOfTickets)
+        {
+            typeSelected = 1;
+        }
+    }
+    /*calls for BFS*/
+    CreateGraph();
+    BFTraversal();
+    
+    /*Formula to calculate the ticket price*/
+    ticketPrice = (basePrice * stationsVisited) * (ticketType * ((typePriceModifier[0] * *(passengerType + 1)) + (typePriceModifier[1] * *(passengerType + 2))
+    + (typePriceModifier[2] * *(passengerType + 3)) + (typePriceModifier[3] * *(passengerType + 4)) + (typePriceModifier[4] * *(passengerType + 5))));
+    printf("The price for the ticket is: £%.2f \n", ticketPrice);
+    if(ticketType = 1.00)
+    {
+        printf("The ticket type is: one-way\n");
+    }
+    else
+    {
+    printf("The ticket type is: return\n");
+    }
+    /*Prints out the number of people from each group catching the train*/
+    printf("It consists of: \n");
+    if(*(passengerType + 1) != 0)
+    {
+        printf("%d under 10\n", *(passengerType + 1));
+    }
+    if(*(passengerType + 2) != 0)
+    {
+        printf("%d under 16\n", *(passengerType + 2));
+    }
+    if(*(passengerType + 3) != 0)
+    {
+        printf("%d student\n", *(passengerType + 3));
+    }
+    if(*(passengerType + 4) != 0)
+    {
+        printf("%d over 60\n", *(passengerType + 4));
+    }
+    if(*(passengerType + 5) != 0)
+    {
+        printf("%d other\n", *(passengerType + 5));
+    }
+
+    return 0;
+}
+/*integers for BFS*/
+int numberOfStations;  
+//the matrix of which stations are connected for BFS
+                    //        0 1 2 3 4 5 6 7 8
+int adj[8][8] = /*0*/       {{0,1,0,0,1,0,0,1},
+                  /*1*/      {1,0,1,1,0,0,1,0},
+                  /*2*/      {0,1,0,1,0,0,1,0}, 
+                  /*3*/      {0,1,1,0,1,0,0,1}, 
+                  /*4*/      {1,0,0,1,0,1,0,0}, 
+                  /*5*/      {0,0,0,0,1,0,1,0}, 
+                  /*6*/      {0,1,1,0,0,1,0,1}, 
+                  /*7*/      {1,0,0,1,0,0,1,0}};
+int state[MAX]; // 1 represents initial, 2 represents waiting, 3 represents visited
+int queue[MAX];
+int front = -1;
+int rear = -1;
+/*BFS methods*/
+void BFTraversal()
+{
+    int currentNode;
+    int endNode;
+    bool validInput = false;
+    
+    for(currentNode=0; currentNode<numberOfStations; currentNode++) 
+    {
+        state[currentNode] = 1;
+    }
+    
+    printf("Enter start destination(between 0 and 7): \n");
+    while(!validInput)
+    {
+        scanf("%d", &currentNode);
+        if(currentNode >= 0 && currentNode <8)
+        {
+            validInput = true;
+        }
+        else
+        {
+            printf("Please enter a valid station!");
+        }
+    }
+    validInput = false;
+    printf("Enter end destination(between 0 and 7): \n");
+        while(!validInput)
+    {
+        scanf("%d", &endNode);
+        if(endNode >= 0 && endNode <8)
+        {
+            validInput = true;
+        }
+        else
+        {
+            printf("Please enter a valid station!");
+        }
+    }
+    validInput = false;
+    BFS(currentNode, endNode);
+}
+ 
+void BFS(int currentNode, int endNode)
+{
+    int i;
+
+    Enqueue(currentNode);
+    state[currentNode] = 2;
+    printf("The route to be taken is: ");
+    
+    while(!IsEmptyQueue() && state[endNode] != 3)
+    {
+        currentNode = Dequeue( );
+        printf("%d ",currentNode);
+        state[currentNode] = 3;
+        
+        for(i=0; i<numberOfStations; i++)
+        {
+            if(adj[currentNode][i] == 1 && state[i] == 1) 
+            {
+                stationsVisited++;
+                Enqueue(i);
+                state[i] = 2;
+            }
+        }
+    }
+    printf("\n");
+}
+// adds a value to the queue
+void Enqueue(int vertex)
+{
+    if(rear == MAX-1)
+        printf("Queue Overflow\n");
+    else
+    {
+        if(front == -1) 
+            front = 0;
+        rear++;
+        queue[rear] = vertex ;
+    }
+}
+ //checks if the queue is currently empty
+int IsEmptyQueue()
+{
+    if(front == -1 || front > rear)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+// removes the first value added to the queue and returns that value
+int Dequeue()
+{
+    int deleteItem;
+    if(front == -1 || front > rear)
+    {
+        printf("Queue Underflow\n");
+        exit(1);
+    }
+    
+    deleteItem = queue[front];
+    front++;
+    return deleteItem;
+}
+// sets the max number of edges
+void CreateGraph()
+{
+    int maxEdge;
+ 
+    numberOfStations = 8;
+    maxEdge = numberOfStations*(numberOfStations - 1);
+}
